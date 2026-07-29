@@ -1,13 +1,12 @@
 // ============================================
 // CONFIGURACIÓN TURSO — REEMPLAZA ESTOS VALORES
 // ============================================
-const TURSO_DB_URL = 'https://devoluciones-juan-morantes.aws-ap-northeast-1.turso.io';  // Ej: https://mi-db-miusuario.turso.io
-const TURSO_AUTH_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODUyNzE4MDEsImlkIjoiMDE5ZmFhMzMtNjQwMS03NmUwLTg5NmMtMGJlNzgyY2QzZWI3Iiwia2lkIjoiZEdKd3VybTJzMUhaMzVmYlU3V2lna052dGdEYXVlajJDbnl2WmpFZEZBYyIsInJpZCI6IjU5MGQyYjM4LTA4NWYtNDE3Yi04ZGI3LTAwYzMyZWI1NGE1ZiJ9.9rWT03A4fYObwWUvNxJ4W3yY6vqOMUi0tX83CXIp8T4yOJ7nWphsomtgRxpXEPIYNztt9RtwuLrvxblzmFuIDQ';            // Token generado con: turso db tokens create mi-db
+var TURSO_DB_URL = 'https://devoluciones-juan-morantes.aws-ap-northeast-1.turso.io';
+var TURSO_AUTH_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODUyNzE4MDEsImlkIjoiMDE5ZmFhMzMtNjQwMS03NmUwLTg5NmMtMGJlNzgyY2QzZWI3Iiwia2lkIjoiZEdKd3VybTJzMUhaMzVmYlU3V2lna052dGdEYXVlajJDbnl2WmpFZEZBYyIsInJpZCI6IjU5MGQyYjM4LTA4NWYtNDE3Yi04ZGI3LTAwYzMyZWI1NGE1ZiJ9.9rWT03A4fYObwWUvNxJ4W3yY6vqOMUi0tX83CXIp8T4yOJ7nWphsomtgRxpXEPIYNztt9RtwuLrvxblzmFuIDQ';
 
 // ============================================
-// CLIENTE HTTP PARA TURSO (API v2 Pipeline)
+// CLIENTE HTTP PARA TURSO
 // ============================================
-
 function buildArg(value) {
   if (value === null || value === undefined) return { type: 'null' };
   if (typeof value === 'number') {
@@ -18,11 +17,12 @@ function buildArg(value) {
   return { type: 'text', value: String(value) };
 }
 
-async function tursoQuery(sql, args = []) {
-  const response = await fetch(`${TURSO_DB_URL}/v2/pipeline`, {
+function tursoQuery(sql, args) {
+  args = args || [];
+  return fetch(TURSO_DB_URL + '/v2/pipeline', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${TURSO_AUTH_TOKEN}`,
+      'Authorization': 'Bearer ' + TURSO_AUTH_TOKEN,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -37,66 +37,74 @@ async function tursoQuery(sql, args = []) {
         { type: 'close' }
       ]
     })
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Turso HTTP ${response.status}: ${errText}`);
-  }
-
-  const data = await response.json();
-
-  if (data.results && data.results[0] && data.results[0].type === 'error') {
-    throw new Error(`Turso error: ${JSON.stringify(data.results[0].error)}`);
-  }
-
-  const result = data.results?.[0]?.response?.result;
-
-  // SELECT: devuelve filas
-  if (result && result.rows) {
-    return result.rows.map(row => {
-      const obj = {};
-      result.cols.forEach((col, idx) => {
-        const cell = row[idx];
-        obj[col.name] = cell ? cell.value : null;
+  })
+  .then(function(response) {
+    if (!response.ok) {
+      return response.text().then(function(errText) {
+        throw new Error('Turso HTTP ' + response.status + ': ' + errText);
       });
-      return obj;
-    });
-  }
+    }
+    return response.json();
+  })
+  .then(function(data) {
+    if (data.results && data.results[0] && data.results[0].type === 'error') {
+      throw new Error('Turso error: ' + JSON.stringify(data.results[0].error));
+    }
 
-  // INSERT/UPDATE/DELETE
-  if (result && result.affected_row_count !== undefined) {
-    return {
-      affectedRows: result.affected_row_count,
-      lastInsertRowid: result.last_insert_rowid
-    };
-  }
+    var result = data.results && data.results[0] && data.results[0].response && data.results[0].response.result;
 
-  return data;
+    if (result && result.rows) {
+      return result.rows.map(function(row) {
+        var obj = {};
+        result.cols.forEach(function(col, idx) {
+          var cell = row[idx];
+          var value = cell ? cell.value : null;
+          
+          // Convertir id a número entero
+          if (col.name === 'id' && value !== null) {
+            value = parseInt(value, 10);
+          }
+          
+          obj[col.name] = value;
+        });
+        return obj;
+      });
+    }
+
+    if (result && result.affected_row_count !== undefined) {
+      return {
+        affectedRows: result.affected_row_count,
+        lastInsertRowid: result.last_insert_rowid
+      };
+    }
+
+    return data;
+  });
 }
 
 // ============================================
 // CRUD DE CONCEPTOS
 // ============================================
-
-export async function getConceptos() {
-  return await tursoQuery('SELECT * FROM conceptos ORDER BY id DESC');
+function getConceptos() {
+  return tursoQuery('SELECT * FROM conceptos ORDER BY id DESC');
 }
 
-export async function addConcepto(motivo, concepto) {
-  return await tursoQuery(
+function addConcepto(motivo, concepto) {
+  return tursoQuery(
     'INSERT INTO conceptos (motivo, concepto) VALUES (?, ?)',
     [motivo, concepto]
   );
 }
 
-export async function updateConcepto(id, motivo, concepto) {
-  return await tursoQuery(
+function updateConcepto(id, motivo, concepto) {
+  return tursoQuery(
     'UPDATE conceptos SET motivo = ?, concepto = ? WHERE id = ?',
     [motivo, concepto, id]
   );
 }
 
-export async function deleteConcepto(id) {
-  return await tursoQuery('DELETE FROM conceptos WHERE id = ?', [id]);
+function deleteConcepto(id) {
+  return tursoQuery('DELETE FROM conceptos WHERE id = ?', [id]);
 }
+
+console.log('✅ turso.js cargado');

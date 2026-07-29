@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https:;">
   <title>Gestor de Conceptos de Devolución</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>📋 Gestor de Conceptos de Devolución</h1>
-      <p>Conectado a Turso (SQLite en la nube) — 5 GB gratis, siempre activo</p>
+      <h1>G C D</h1>
     </div>
 
     <div class="stats">
@@ -45,7 +43,7 @@
     <div class="modal">
       <div class="modal-header">
         <h2 id="modalTitle">Nuevo Concepto</h2>
-        <button class="btn btn-ghost" id="btnCerrarModal" style="padding:6px 10px;">✕</button>
+        <button class="btn btn-ghost" id="btnCerrarModal">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -68,7 +66,7 @@
 
   <!-- Modal de confirmación eliminar -->
   <div class="modal-overlay" id="modalConfirm">
-    <div class="modal" style="max-width: 400px;">
+    <div class="modal confirm-modal">
       <div class="modal-header">
         <h2>¿Eliminar concepto?</h2>
       </div>
@@ -84,6 +82,8 @@
 
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="app.js"></script>
+  <!-- IMPORTANTE: turso.js PRIMERO, app.js DESPUÉS -->
+  <script src="turso.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
