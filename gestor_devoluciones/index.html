@@ -3,13 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
   <title>Gestor de Conceptos de Devolución</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>G C D</h1>
+      <h1><div class="logo">
+  <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Documento / factura -->
+    <rect x="8" y="4" width="28" height="36" rx="4" stroke="currentColor" stroke-width="2.5" fill="none"/>
+    <!-- Líneas de texto (conceptos) -->
+    <line x1="14" y1="14" x2="30" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="30" x2="22" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <!-- Flecha de devolución -->
+    <path d="M34 38L30 42M30 42L34 46M30 42H40C42.2091 42 44 40.2091 44 38V30" 
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>
+  <div class="logo-text">
+    <span class="logo-title">Devoluciones</span>
+    <span class="logo-sub">Gestor de Conceptos</span>
+  </div>
+</div>
+</h1>
     </div>
 
     <div class="stats">
@@ -81,6 +99,16 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+    <!-- Firma / Marca de agua -->
+  <div class="signature">
+    <span class="signature-name">Juan Morantes</span>
+    <span class="signature-role">Developer</span>
+  </div>
+
+  <script src="turso.js"></script>
+  <script src="app.js"></script>
+</body>
 
   <!-- IMPORTANTE: turso.js PRIMERO, app.js DESPUÉS -->
   <script src="turso.js"></script>

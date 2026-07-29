@@ -411,3 +411,65 @@ body {
     justify-content: center;
   }
 }
+
+.signature {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.75;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+}
+
+.signature-name {
+  font-weight: 600;
+}
+
+.signature-sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.signature-role {
+  font-weight: 500;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+}
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.logo-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.logo-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
