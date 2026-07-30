@@ -1,18 +1,47 @@
 // ============================================
-// APP.JS - VERSIÓN CON LOGS DE DEPURACIÓN
+// APP.JS - LOGIN (ADMIN/INVITADO) + MODO OSCURO
 // ============================================
 
 console.log('🚀 app.js iniciando...');
 
-// Esperamos a que el DOM esté completamente cargado
+// ============================================
+// CONFIGURACIÓN
+// ============================================
+var ADMIN_PASSWORD = 'admin2024'; // <-- CAMBIA ESTA CONTRASEÑA
+
 document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ DOM cargado completamente');
 
+  // ============================================
+  // VARIABLES GLOBALES
+  // ============================================
   var items = [];
   var editingId = null;
   var deletingId = null;
+  var currentRole = null; // 'admin' | 'guest'
 
-  // Referencias DOM
+  // ============================================
+  // REFERENCIAS DOM - LOGIN
+  // ============================================
+  var elLoginScreen = document.getElementById('loginScreen');
+  var elAppContainer = document.getElementById('appContainer');
+  var elInputPassword = document.getElementById('inputPassword');
+  var elLoginError = document.getElementById('loginError');
+  var elBtnLoginGuest = document.getElementById('btnLoginGuest');
+  var elBtnLoginAdmin = document.getElementById('btnLoginAdmin');
+  var elBtnLogout = document.getElementById('btnLogout');
+  var elUserRoleBadge = document.getElementById('userRoleBadge');
+
+  // ============================================
+  // REFERENCIAS DOM - TEMA
+  // ============================================
+  var elBtnThemeToggle = document.getElementById('btnThemeToggle');
+  var elIconSun = document.getElementById('iconSun');
+  var elIconMoon = document.getElementById('iconMoon');
+
+  // ============================================
+  // REFERENCIAS DOM - APP
+  // ============================================
   var elList = document.getElementById('list');
   var elSearch = document.getElementById('searchInput');
   var elModal = document.getElementById('modal');
@@ -24,6 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
   var elStatTotal = document.getElementById('stat-total');
   var elStatShowing = document.getElementById('stat-showing');
 
+  // Botones admin
+  var elBtnNuevo = document.getElementById('btnNuevo');
+  var elBtnRecargar = document.getElementById('btnRecargar');
+
   console.log('📌 Elementos DOM:', {
     list: !!elList,
     search: !!elSearch,
@@ -34,9 +67,133 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================
-  // EVENT LISTENERS ESTÁTICOS
+  // TEMA (MODO OSCURO)
   // ============================================
-  document.getElementById('btnNuevo').addEventListener('click', function() {
+  function initTheme() {
+    var savedTheme = localStorage.getItem('devoluciones_theme');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    applyTheme(theme);
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('devoluciones_theme', theme);
+    if (elIconSun && elIconMoon) {
+      if (theme === 'dark') {
+        elIconSun.style.display = 'block';
+        elIconMoon.style.display = 'none';
+      } else {
+        elIconSun.style.display = 'none';
+        elIconMoon.style.display = 'block';
+      }
+    }
+    console.log('🌙 Tema aplicado:', theme);
+  }
+
+  function toggleTheme() {
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    showToast(next === 'dark' ? 'Modo oscuro activado' : 'Modo claro activado', 'success');
+  }
+
+  // ============================================
+  // AUTENTICACIÓN
+  // ============================================
+  function checkSession() {
+    var saved = localStorage.getItem('devoluciones_role');
+    if (saved === 'admin' || saved === 'guest') {
+      currentRole = saved;
+      showApp();
+      return true;
+    }
+    showLogin();
+    return false;
+  }
+
+  function showLogin() {
+    elLoginScreen.style.display = 'flex';
+    elAppContainer.classList.add('hidden');
+    elInputPassword.value = '';
+    elLoginError.textContent = '';
+  }
+
+  function showApp() {
+    elLoginScreen.style.display = 'none';
+    elAppContainer.classList.remove('hidden');
+    updateUIBasedOnRole();
+    loadData();
+  }
+
+  function loginAsGuest() {
+    currentRole = 'guest';
+    localStorage.setItem('devoluciones_role', 'guest');
+    showApp();
+    showToast('Bienvenido, modo Invitado', 'success');
+  }
+
+  function loginAsAdmin() {
+    var pwd = elInputPassword.value.trim();
+    if (pwd === ADMIN_PASSWORD) {
+      currentRole = 'admin';
+      localStorage.setItem('devoluciones_role', 'admin');
+      showApp();
+      showToast('Bienvenido, Administrador', 'success');
+    } else {
+      elLoginError.textContent = 'Contraseña incorrecta';
+      elInputPassword.classList.add('error');
+      setTimeout(function() { elInputPassword.classList.remove('error'); }, 2000);
+    }
+  }
+
+  function logout() {
+    currentRole = null;
+    localStorage.removeItem('devoluciones_role');
+    items = [];
+    elList.innerHTML = '';
+    showLogin();
+    showToast('Sesión cerrada', 'success');
+  }
+
+  function updateUIBasedOnRole() {
+    if (currentRole === 'admin') {
+      elUserRoleBadge.textContent = 'Administrador';
+      elUserRoleBadge.classList.add('admin');
+    } else {
+      elUserRoleBadge.textContent = 'Invitado';
+      elUserRoleBadge.classList.remove('admin');
+    }
+
+    if (elBtnNuevo) elBtnNuevo.style.display = currentRole === 'admin' ? 'inline-flex' : 'none';
+    if (elBtnRecargar) elBtnRecargar.style.display = currentRole === 'admin' ? 'inline-flex' : 'none';
+  }
+
+  function canEditDelete() {
+    return currentRole === 'admin';
+  }
+
+  // ============================================
+  // EVENT LISTENERS - LOGIN
+  // ============================================
+  elBtnLoginGuest.addEventListener('click', loginAsGuest);
+  elBtnLoginAdmin.addEventListener('click', loginAsAdmin);
+  elInputPassword.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loginAsAdmin();
+  });
+  elBtnLogout.addEventListener('click', logout);
+
+  // ============================================
+  // EVENT LISTENERS - TEMA
+  // ============================================
+  if (elBtnThemeToggle) {
+    elBtnThemeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // ============================================
+  // EVENT LISTENERS - APP
+  // ============================================
+  elBtnNuevo.addEventListener('click', function() {
     console.log('🔘 btnNuevo clickeado');
     openModal();
   });
@@ -49,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     saveItem();
   });
 
-  document.getElementById('btnRecargar').addEventListener('click', function() {
+  elBtnRecargar.addEventListener('click', function() {
     console.log('🔘 btnRecargar clickeado');
     loadData();
   });
@@ -79,17 +236,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ============================================
-  // DELEGACIÓN DE EVENTOS - CON LOGS
+  // DELEGACIÓN DE EVENTOS
   // ============================================
   if (elList) {
     elList.addEventListener('click', function(e) {
       console.log('📦 Click detectado en #list');
-      console.log('   → e.target:', e.target.tagName, e.target.className);
-      console.log('   → e.target.textContent:', e.target.textContent.trim());
-
       var btn = e.target.closest('button');
-      console.log('   → closest(button):', btn ? (btn.className + ' data-id=' + btn.dataset.id) : 'null');
-
       if (!btn) {
         console.log('   ❌ No es un botón');
         return;
@@ -104,15 +256,21 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      console.log('   → Clases:', btn.className);
-
       if (btn.classList.contains('btn-copy')) {
         console.log('   ✅ Ejecutando COPY id=' + id);
         copyConcept(id);
       } else if (btn.classList.contains('btn-edit')) {
+        if (!canEditDelete()) {
+          showToast('No tienes permisos para editar', 'error');
+          return;
+        }
         console.log('   ✅ Ejecutando EDIT id=' + id);
         editItem(id);
       } else if (btn.classList.contains('btn-delete')) {
+        if (!canEditDelete()) {
+          showToast('No tienes permisos para eliminar', 'error');
+          return;
+        }
         console.log('   ✅ Ejecutando DELETE id=' + id);
         promptDelete(id);
       } else {
@@ -135,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(function(data) {
         items = data;
         console.log('📥 Datos recibidos:', items.length, 'conceptos');
-        console.log('📥 Primer item:', items[0] ? (items[0].id + ' - ' + items[0].motivo.substring(0, 30)) : 'ninguno');
         render();
         showToast('Cargados ' + items.length + ' conceptos', 'success');
       })
@@ -181,14 +338,21 @@ document.addEventListener('DOMContentLoaded', function() {
         motivoHtml = highlightText(motivoHtml, q);
         conceptoHtml = highlightText(conceptoHtml, q);
       }
+
+      var adminButtons = '';
+      if (canEditDelete()) {
+        adminButtons =
+          '<button class="btn-edit" data-id="' + it.id + '">✏️ Editar</button>' +
+          '<button class="btn-delete" data-id="' + it.id + '">🗑️ Eliminar</button>';
+      }
+
       return '<div class="card">' +
         '<div class="card-header"><div class="card-title">' + motivoHtml + '</div>' +
         '<span class="badge">#' + it.id + '</span></div>' +
         '<div class="card-body">' + conceptoHtml + '</div>' +
         '<div class="card-actions">' +
         '<button class="btn-copy" data-id="' + it.id + '">📋 Copiar</button>' +
-        '<button class="btn-edit" data-id="' + it.id + '">✏️ Editar</button>' +
-        '<button class="btn-delete" data-id="' + it.id + '">🗑️ Eliminar</button>' +
+        adminButtons +
         '</div></div>';
     }).join('');
 
@@ -225,6 +389,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // MODALES
   // ============================================
   function openModal() {
+    if (!canEditDelete()) {
+      showToast('No tienes permisos para crear conceptos', 'error');
+      return;
+    }
     console.log('📂 openModal()');
     editingId = null;
     clearErrors();
@@ -257,6 +425,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function saveItem() {
     console.log('💾 saveItem() - editingId:', editingId);
+    if (!canEditDelete()) {
+      showToast('No tienes permisos para guardar', 'error');
+      return;
+    }
     if (!validate()) {
       showToast('Completa los campos obligatorios', 'error');
       return;
@@ -340,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('   ❌ No encontrado en items');
       return;
     }
-    var text = it.motivo + '\n\n' + it.concepto;
+    var text = it.concepto;
     console.log('   📋 Texto a copiar (' + text.length + ' chars)');
     navigator.clipboard.writeText(text).then(function() {
       showToast('Copiado al portapapeles', 'success');
@@ -361,7 +533,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // ============================================
   // INICIAR
   // ============================================
-  console.log('🚀 Iniciando loadData()...');
-  loadData();
+  initTheme();
+  console.log('🚀 Iniciando checkSession()...');
+  checkSession();
 
 }); // fin DOMContentLoaded
