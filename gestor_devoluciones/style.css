@@ -412,36 +412,12 @@ body {
   }
 }
 
-.signature {
-  text-align: center;
-  margin-top: 40px;
-  margin-bottom: 20px;
-  font-size: 0.7rem;
-  color: var(--muted);
-  opacity: 0.75;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  user-select: none;
-  pointer-events: none;
-}
-
-.signature-name {
-  font-weight: 600;
-}
-
-.signature-sep {
-  margin: 0 6px;
-  opacity: 0.5;
-}
-
-.signature-role {
-  font-weight: 500;
-}
+/*================= logo inicio =========================*/
 
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   justify-content: center;
 }
 
@@ -473,3 +449,58 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
+/*======================= marca de agua nombre ==================== */
+.signature {
+  width: auto;
+  height: auto;
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  line-height: 1.4;
+  user-select: none;
+  pointer-events: none;
+}
+
+.signature-divider {
+    font-size: 30px;
+    font-weight: 300;
+    color: var(--muted);
+    opacity: 0.30;
+    user-select: none;
+    pointer-events: none;
+}
+
+.signature-name {
+  font-weight: 600;
+}
+
+.signature-role {
+  font-weight: 400;
+}
+
+/*================= logo encima de la marca de agua =========================*/
+.footer {
+  margin-top: 30px;
+  padding-bottom: 20px;
+}
+
+.footer-brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-logo svg {
+  width: 100px;
+  height: 100px;
+  opacity: 0.25;
+  fill: var(--text);
+  pointer-events: none;
+  user-select: none;
+}
+

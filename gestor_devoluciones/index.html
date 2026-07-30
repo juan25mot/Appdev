@@ -10,26 +10,22 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1><div class="logo">
-  <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Documento / factura -->
-    <rect x="8" y="4" width="28" height="36" rx="4" stroke="currentColor" stroke-width="2.5" fill="none"/>
-    <!-- Líneas de texto (conceptos) -->
-    <line x1="14" y1="14" x2="30" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <line x1="14" y1="30" x2="22" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    <!-- Flecha de devolución -->
-    <path d="M34 38L30 42M30 42L34 46M30 42H40C42.2091 42 44 40.2091 44 38V30" 
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </svg>
-  <div class="logo-text">
-    <span class="logo-title">Devoluciones</span>
-    <span class="logo-sub">Gestor de Conceptos</span>
-  </div>
-</div>
-</h1>
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="4" width="28" height="36" rx="4" stroke="currentColor" stroke-width="2.5" fill="none"/>
+          <line x1="14" y1="14" x2="30" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="22" x2="26" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="30" x2="22" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M34 38L30 42M30 42L34 46M30 42H40C42.2091 42 44 40.2091 44 38V30" 
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <div class="logo-text">
+          <span class="logo-title">Devoluciones</span>
+          <span class="logo-sub">Gestor de Conceptos</span>
+        </div>
+      </div>
     </div>
-
+    
     <div class="stats">
       <div class="stat">Total: <strong id="stat-total">0</strong></div>
       <div class="stat">Mostrando: <strong id="stat-showing">0</strong></div>
@@ -98,19 +94,27 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1608 1608">
+          <path d="M472 615.5V633l57.3.2 57.2.3.3 119.5c.1 70.3-.2 123-.7 128-1.2 10.9-4.2 18.4-10 25.7-16.5 20.5-47.5 23.5-70.1 6.9-1.9-1.4-11.4-10.5-21-20.1L467.5 876l-37.4 37.4-37.4 37.4 3.6 6.4c8.8 15.8 21.8 31.5 35.2 42.7 55.2 46 129.7 52.9 191.1 17.7 36.6-21 62.9-54.8 74.9-96.2 6.1-21.2 5.8-13.9 6.4-147.2l.6-122.2 23 21.1c20.8 19.1 68 63 126.3 117.3 11.7 10.9 21.4 19.7 21.5 19.5.3-.4 10.6-33 11.4-35.9.2-1-10.4-11.4-29.4-29-16.4-15.1-50.9-47.1-76.8-71.1-25.8-24-54.9-50.8-64.5-59.7L698.5 598H668v145.2c0 159.2.2 153.9-6 172.7-13.8 42.4-47 73.3-91 84.8-12.9 3.4-38.8 4.3-53 1.9-23.2-4.1-44.9-14.2-63.5-29.6-6.6-5.4-16.5-16.1-16.5-17.7 0-.4 6.5-7.3 14.4-15.2l14.4-14.4 8.3 7.5c15.2 13.5 26.3 19.7 42.4 23.8 17.1 4.4 34.2 3.4 51.7-3 20.4-7.4 38-24.5 46.6-45.1 6.5-15.7 6.2-8.1 6.2-166.9V598H472zm583.4 4.8c-13.2 12.2-37.5 34.6-53.9 49.7-84.3 77.5-78.9 72.3-80.7 77.6-1.6 4.7-21 64.2-31.8 97.9-2.8 8.8-12.4 38.3-21.2 65.5s-21.1 65.5-27.4 85-12.1 37.4-12.9 39.7l-1.4 4.3h37.5l23.7-73.8c13.1-40.5 29.6-91.9 36.8-114.2 7.1-22.3 16.6-51.6 20.9-65.1l8-24.6 18.2-16.9c17.1-15.9 68.7-63.4 91.4-84.1l10.1-9.2.6 94.6c.4 52.1.7 126.2.7 164.7 0 38.6.3 83.3.7 99.3l.6 29.3h35.7l-.5-54.3c-.9-96.4-1.5-223.2-1.5-306.5V598h-29.5z"/>
+          <path d="M793.7 852.3c-14.7 9.4-34.5 22.2-44 28.3l-17.2 11.1v28.5l22.6 14.7c55.8 36.2 65.1 42.2 65.4 41.9 1-1 13.4-29.2 13-29.6-.5-.5-10.3-6.9-42.7-27.7-10.9-7-19.8-13-19.8-13.4 0-.8 5.6-4.5 44-29.1 9.6-6.2 17.9-11.6 18.3-12 .6-.6-8.4-22-12-28.3-.7-1.4-5.1 1.1-27.6 15.6m161-12.1c-1.3 2.9-4.3 9.5-6.7 14.7-3.9 8.6-4.1 9.5-2.6 10.6.9.7 15.1 10 31.6 20.6 16.5 10.7 29.8 19.7 29.7 20.1-.1.5-7.2 5.3-15.7 10.7-32.2 20.7-47 30.5-47 31.1 0 .3 2.9 6.9 6.4 14.6 4.2 9 6.9 13.8 7.8 13.6 1.2-.3 26.6-16.5 71.3-45.5l16-10.3v-28.7l-23-14.9c-12.6-8.2-31.5-20.3-42-27-10.4-6.6-20-12.7-21.2-13.5-2.2-1.4-2.3-1.3-4.6 3.9"/>
+        </svg>
+      </div>
+      <span class="signature-divider">|</span>
+      <div class="signature">
+        <span class="signature-name">Juan Morantes</span>
+        <span class="signature-role">Developer</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- TOAST: SIEMPRE FUERA DE TODO, AL FINAL DEL BODY -->
   <div class="toast" id="toast"></div>
 
-    <!-- Firma / Marca de agua -->
-  <div class="signature">
-    <span class="signature-name">Juan Morantes</span>
-    <span class="signature-role">Developer</span>
-  </div>
-
-  <script src="turso.js"></script>
-  <script src="app.js"></script>
-</body>
-
-  <!-- IMPORTANTE: turso.js PRIMERO, app.js DESPUÉS -->
+  <!-- SCRIPTS -->
   <script src="turso.js"></script>
   <script src="app.js"></script>
 </body>
