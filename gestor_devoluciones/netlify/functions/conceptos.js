@@ -1,4 +1,5 @@
 // Netlify Function: CRUD Conceptos
+
 // GET    /.netlify/functions/conceptos          -> listar todos
 // POST   /.netlify/functions/conceptos          -> crear (requiere admin)
 // PUT    /.netlify/functions/conceptos?id=X     -> actualizar (requiere admin)
