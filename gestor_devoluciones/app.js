@@ -1,13 +1,8 @@
 // ============================================
-// APP.JS - LOGIN (ADMIN/INVITADO) + MODO OSCURO
+// APP.JS - LOGIN REAL CON NETLIFY FUNCTIONS + MODO OSCURO
 // ============================================
 
 console.log('🚀 app.js iniciando...');
-
-// ============================================
-// CONFIGURACIÓN
-// ============================================
-var ADMIN_PASSWORD = 'admin2024'; // <-- CAMBIA ESTA CONTRASEÑA
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ DOM cargado completamente');
@@ -18,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var items = [];
   var editingId = null;
   var deletingId = null;
-  var currentRole = null; // 'admin' | 'guest'
+  var currentRole = null;
 
   // ============================================
   // REFERENCIAS DOM - LOGIN
@@ -52,19 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
   var elConfirmText = document.getElementById('confirmText');
   var elStatTotal = document.getElementById('stat-total');
   var elStatShowing = document.getElementById('stat-showing');
-
-  // Botones admin
   var elBtnNuevo = document.getElementById('btnNuevo');
   var elBtnRecargar = document.getElementById('btnRecargar');
-
-  console.log('📌 Elementos DOM:', {
-    list: !!elList,
-    search: !!elSearch,
-    modal: !!elModal,
-    modalConfirm: !!elModalConfirm,
-    inputMotivo: !!elInputMotivo,
-    inputConcepto: !!elInputConcepto
-  });
 
   // ============================================
   // TEMA (MODO OSCURO)
@@ -80,15 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('devoluciones_theme', theme);
     if (elIconSun && elIconMoon) {
-      if (theme === 'dark') {
-        elIconSun.style.display = 'block';
-        elIconMoon.style.display = 'none';
-      } else {
-        elIconSun.style.display = 'none';
-        elIconMoon.style.display = 'block';
-      }
+      elIconSun.style.display = theme === 'dark' ? 'block' : 'none';
+      elIconMoon.style.display = theme === 'dark' ? 'none' : 'block';
     }
-    console.log('🌙 Tema aplicado:', theme);
   }
 
   function toggleTheme() {
@@ -99,17 +77,28 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ============================================
-  // AUTENTICACIÓN
+  // AUTENTICACIÓN REAL (con servidor)
   // ============================================
   function checkSession() {
-    var saved = localStorage.getItem('devoluciones_role');
-    if (saved === 'admin' || saved === 'guest') {
-      currentRole = saved;
-      showApp();
-      return true;
+    var savedRole = localStorage.getItem('devoluciones_role');
+    var savedToken = localStorage.getItem('devoluciones_token');
+
+    if (!savedRole || !savedToken) {
+      showLogin();
+      return;
     }
-    showLogin();
-    return false;
+
+    // Validar token con el servidor
+    apiValidate()
+      .then(function(data) {
+        currentRole = data.role || savedRole;
+        showApp();
+      })
+      .catch(function(err) {
+        console.error('Token inválido:', err);
+        forceLogout();
+        showToast('Sesión expirada. Por favor inicia sesión de nuevo.', 'error');
+      });
   }
 
   function showLogin() {
@@ -129,31 +118,49 @@ document.addEventListener('DOMContentLoaded', function() {
   function loginAsGuest() {
     currentRole = 'guest';
     localStorage.setItem('devoluciones_role', 'guest');
+    localStorage.removeItem('devoluciones_token');
     showApp();
     showToast('Bienvenido, modo Invitado', 'success');
   }
 
   function loginAsAdmin() {
     var pwd = elInputPassword.value.trim();
-    if (pwd === ADMIN_PASSWORD) {
-      currentRole = 'admin';
-      localStorage.setItem('devoluciones_role', 'admin');
-      showApp();
-      showToast('Bienvenido, Administrador', 'success');
-    } else {
-      elLoginError.textContent = 'Contraseña incorrecta';
-      elInputPassword.classList.add('error');
-      setTimeout(function() { elInputPassword.classList.remove('error'); }, 2000);
+    if (!pwd) {
+      elLoginError.textContent = 'Ingresa la contraseña';
+      return;
     }
+
+    apiLogin(pwd)
+      .then(function(data) {
+        currentRole = data.role;
+        localStorage.setItem('devoluciones_role', data.role);
+        localStorage.setItem('devoluciones_token', data.token);
+        showApp();
+        showToast('Bienvenido, Administrador', 'success');
+      })
+      .catch(function(err) {
+        elLoginError.textContent = err.message || 'Contraseña incorrecta';
+        elInputPassword.classList.add('error');
+        setTimeout(function() { elInputPassword.classList.remove('error'); }, 2000);
+      });
   }
 
   function logout() {
     currentRole = null;
     localStorage.removeItem('devoluciones_role');
+    localStorage.removeItem('devoluciones_token');
     items = [];
     elList.innerHTML = '';
     showLogin();
     showToast('Sesión cerrada', 'success');
+  }
+
+  function forceLogout() {
+    currentRole = null;
+    localStorage.removeItem('devoluciones_role');
+    localStorage.removeItem('devoluciones_token');
+    items = [];
+    showLogin();
   }
 
   function updateUIBasedOnRole() {
@@ -174,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ============================================
-  // EVENT LISTENERS - LOGIN
+  // EVENT LISTENERS
   // ============================================
   elBtnLoginGuest.addEventListener('click', loginAsGuest);
   elBtnLoginAdmin.addEventListener('click', loginAsAdmin);
@@ -182,112 +189,60 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') loginAsAdmin();
   });
   elBtnLogout.addEventListener('click', logout);
+  if (elBtnThemeToggle) elBtnThemeToggle.addEventListener('click', toggleTheme);
 
-  // ============================================
-  // EVENT LISTENERS - TEMA
-  // ============================================
-  if (elBtnThemeToggle) {
-    elBtnThemeToggle.addEventListener('click', toggleTheme);
-  }
-
-  // ============================================
-  // EVENT LISTENERS - APP
-  // ============================================
-  elBtnNuevo.addEventListener('click', function() {
-    console.log('🔘 btnNuevo clickeado');
-    openModal();
+  // Escuchar evento de token expirado desde api.js
+  window.addEventListener('api:unauthorized', function() {
+    forceLogout();
+    showToast('Sesión expirada. Por favor inicia sesión de nuevo.', 'error');
   });
 
+  // App listeners
+  elBtnNuevo.addEventListener('click', function() { openModal(); });
   document.getElementById('btnCerrarModal').addEventListener('click', closeModal);
   document.getElementById('btnCancelar').addEventListener('click', closeModal);
-
-  document.getElementById('btnGuardar').addEventListener('click', function() {
-    console.log('🔘 btnGuardar clickeado');
-    saveItem();
-  });
-
-  elBtnRecargar.addEventListener('click', function() {
-    console.log('🔘 btnRecargar clickeado');
-    loadData();
-  });
-
+  document.getElementById('btnGuardar').addEventListener('click', saveItem);
+  elBtnRecargar.addEventListener('click', loadData);
   document.getElementById('btnCancelarEliminar').addEventListener('click', closeConfirmModal);
-
-  document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
-    console.log('🔘 btnConfirmarEliminar clickeado');
-    confirmDelete();
-  });
-
+  document.getElementById('btnConfirmarEliminar').addEventListener('click', confirmDelete);
   elSearch.addEventListener('input', render);
 
   elModal.addEventListener('click', function(e) {
     if (e.target.id === 'modal') closeModal();
   });
-
   elModalConfirm.addEventListener('click', function(e) {
     if (e.target.id === 'modalConfirm') closeConfirmModal();
   });
-
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeModal();
-      closeConfirmModal();
-    }
+    if (e.key === 'Escape') { closeModal(); closeConfirmModal(); }
   });
 
-  // ============================================
-  // DELEGACIÓN DE EVENTOS
-  // ============================================
+  // Delegación de eventos en lista
   if (elList) {
     elList.addEventListener('click', function(e) {
-      console.log('📦 Click detectado en #list');
       var btn = e.target.closest('button');
-      if (!btn) {
-        console.log('   ❌ No es un botón');
-        return;
-      }
-
-      var rawId = btn.getAttribute('data-id');
-      var id = parseInt(rawId, 10);
-      console.log('   → raw data-id:', rawId, '| parseInt:', id);
-
-      if (!id || isNaN(id)) {
-        console.log('   ❌ ID inválido');
-        return;
-      }
+      if (!btn) return;
+      var id = parseInt(btn.getAttribute('data-id'), 10);
+      if (!id || isNaN(id)) return;
 
       if (btn.classList.contains('btn-copy')) {
-        console.log('   ✅ Ejecutando COPY id=' + id);
         copyConcept(id);
       } else if (btn.classList.contains('btn-edit')) {
-        if (!canEditDelete()) {
-          showToast('No tienes permisos para editar', 'error');
-          return;
-        }
-        console.log('   ✅ Ejecutando EDIT id=' + id);
+        if (!canEditDelete()) { showToast('No tienes permisos para editar', 'error'); return; }
         editItem(id);
       } else if (btn.classList.contains('btn-delete')) {
-        if (!canEditDelete()) {
-          showToast('No tienes permisos para eliminar', 'error');
-          return;
-        }
-        console.log('   ✅ Ejecutando DELETE id=' + id);
+        if (!canEditDelete()) { showToast('No tienes permisos para eliminar', 'error'); return; }
         promptDelete(id);
-      } else {
-        console.log('   ⚠️ Botón sin clase reconocida');
       }
     });
-    console.log('✅ Listener de delegación agregado a #list');
-  } else {
-    console.error('❌ #list no existe en el DOM');
   }
 
   // ============================================
-  // CRUD CON TURSO
+  // CRUD (ahora via Netlify Functions)
   // ============================================
   function loadData() {
     console.log('🔄 loadData() iniciado');
-    elList.innerHTML = '<div class="empty-state"><p>⏳ Cargando desde Turso...</p></div>';
+    elList.innerHTML = '<div class="empty-state"><p>⏳ Cargando conceptos...</p></div>';
 
     getConceptos()
       .then(function(data) {
@@ -300,23 +255,17 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('❌ ERROR en loadData:', err);
         elList.innerHTML =
           '<div style="background:#fee2e2;border:1px solid #fecaca;border-radius:10px;padding:20px;color:#991b1b;">' +
-          '<h3 style="margin-top:0;">❌ Error al conectar con Turso</h3>' +
+          '<h3 style="margin-top:0;">❌ Error al cargar datos</h3>' +
           '<p><strong>Mensaje:</strong> ' + escapeHtml(err.message) + '</p>' +
-          '<p style="font-size:0.85rem;margin-bottom:0;">' +
-          'Revisa:<br>1. ¿URL y token en turso.js son correctos?<br>' +
-          '2. ¿La tabla "conceptos" existe en Turso?<br>' +
-          '3. Presiona F12 → Console para más detalles.</p></div>';
+          '<p style="font-size:0.85rem;margin-bottom:0;">Revisa la consola (F12) para más detalles.</p></div>';
         showToast('Error de conexión', 'error');
       });
   }
 
   function render() {
-    console.log('🎨 render() - items:', items.length, '| search:', elSearch.value);
     var q = normalizeText(elSearch.value);
     var filtered = items.filter(function(it) {
-      var m = normalizeText(it.motivo);
-      var c = normalizeText(it.concepto);
-      return m.indexOf(q) !== -1 || c.indexOf(q) !== -1;
+      return normalizeText(it.motivo).indexOf(q) !== -1 || normalizeText(it.concepto).indexOf(q) !== -1;
     });
 
     elStatTotal.textContent = items.length;
@@ -338,13 +287,10 @@ document.addEventListener('DOMContentLoaded', function() {
         motivoHtml = highlightText(motivoHtml, q);
         conceptoHtml = highlightText(conceptoHtml, q);
       }
-
-      var adminButtons = '';
-      if (canEditDelete()) {
-        adminButtons =
-          '<button class="btn-edit" data-id="' + it.id + '">✏️ Editar</button>' +
-          '<button class="btn-delete" data-id="' + it.id + '">🗑️ Eliminar</button>';
-      }
+      var adminButtons = canEditDelete()
+        ? '<button class="btn-edit" data-id="' + it.id + '">✏️ Editar</button>' +
+          '<button class="btn-delete" data-id="' + it.id + '">🗑️ Eliminar</button>'
+        : '';
 
       return '<div class="card">' +
         '<div class="card-header"><div class="card-title">' + motivoHtml + '</div>' +
@@ -357,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }).join('');
 
     elList.innerHTML = html;
-    console.log('🎨 render() completado - tarjetas:', filtered.length);
   }
 
   // ============================================
@@ -389,11 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // MODALES
   // ============================================
   function openModal() {
-    if (!canEditDelete()) {
-      showToast('No tienes permisos para crear conceptos', 'error');
-      return;
-    }
-    console.log('📂 openModal()');
+    if (!canEditDelete()) { showToast('No tienes permisos', 'error'); return; }
     editingId = null;
     clearErrors();
     elModalTitle.textContent = 'Nuevo Concepto';
@@ -404,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function closeModal() {
-    console.log('📂 closeModal()');
     elModal.classList.remove('active');
     editingId = null;
     clearErrors();
@@ -424,18 +364,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveItem() {
-    console.log('💾 saveItem() - editingId:', editingId);
-    if (!canEditDelete()) {
-      showToast('No tienes permisos para guardar', 'error');
-      return;
-    }
-    if (!validate()) {
-      showToast('Completa los campos obligatorios', 'error');
-      return;
-    }
+    if (!canEditDelete()) { showToast('No tienes permisos', 'error'); return; }
+    if (!validate()) { showToast('Completa los campos obligatorios', 'error'); return; }
+
     var motivo = elInputMotivo.value.trim();
     var concepto = elInputConcepto.value.trim();
-
     var promise = editingId
       ? updateConcepto(editingId, motivo, concepto)
       : addConcepto(motivo, concepto);
@@ -447,18 +380,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return loadData();
       })
       .catch(function(err) {
-        console.error('❌ ERROR en saveItem:', err);
         showToast('Error al guardar: ' + err.message, 'error');
       });
   }
 
   function editItem(id) {
-    console.log('✏️ editItem(' + id + ')');
     var it = items.find(function(x) { return x.id == id; });
-    if (!it) {
-      console.log('   ❌ No encontrado en items');
-      return;
-    }
+    if (!it) return;
     editingId = id;
     clearErrors();
     elModalTitle.textContent = 'Editar Concepto';
@@ -468,36 +396,26 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function promptDelete(id) {
-    console.log('🗑️ promptDelete(' + id + ')');
     var it = items.find(function(x) { return x.id == id; });
-    if (!it) {
-      console.log('   ❌ No encontrado en items');
-      return;
-    }
+    if (!it) return;
     deletingId = id;
     elConfirmText.textContent = '¿Eliminar permanentemente "' + it.motivo + '"?';
     elModalConfirm.classList.add('active');
   }
 
   function closeConfirmModal() {
-    console.log('📂 closeConfirmModal()');
     elModalConfirm.classList.remove('active');
     deletingId = null;
   }
 
   function confirmDelete() {
-    console.log('🗑️ confirmDelete() - deletingId:', deletingId);
-    if (!deletingId) {
-      console.log('   ❌ No hay deletingId');
-      return;
-    }
+    if (!deletingId) return;
     deleteConcepto(deletingId)
       .then(function() {
         showToast('Concepto eliminado', 'success');
         return loadData();
       })
       .catch(function(err) {
-        console.error('❌ ERROR en confirmDelete:', err);
         showToast('Error al eliminar: ' + err.message, 'error');
       })
       .finally(function() {
@@ -506,18 +424,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function copyConcept(id) {
-    console.log('📋 copyConcept(' + id + ')');
     var it = items.find(function(x) { return x.id == id; });
-    if (!it) {
-      console.log('   ❌ No encontrado en items');
-      return;
-    }
-    var text = it.concepto;
-    console.log('   📋 Texto a copiar (' + text.length + ' chars)');
-    navigator.clipboard.writeText(text).then(function() {
+    if (!it) return;
+    navigator.clipboard.writeText(it.concepto).then(function() {
       showToast('Copiado al portapapeles', 'success');
-    }).catch(function(err) {
-      console.error('   ❌ Error al copiar:', err);
+    }).catch(function() {
       showToast('No se pudo copiar', 'error');
     });
   }
@@ -534,7 +445,5 @@ document.addEventListener('DOMContentLoaded', function() {
   // INICIAR
   // ============================================
   initTheme();
-  console.log('🚀 Iniciando checkSession()...');
   checkSession();
-
-}); // fin DOMContentLoaded
+});

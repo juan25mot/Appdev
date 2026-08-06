@@ -1,0 +1,6 @@
+
+[build]
+  publish = "gestor_devoluciones"
+
+[functions]
+  directory = "netlify/functions"
